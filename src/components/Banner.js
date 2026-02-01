@@ -32,7 +32,7 @@ export const Banner = () => {
       setLoopNum(loopNum + 1);
       setDelta(500);
     }
-  }, [loopNum, isDeleting, text, toRotate]);
+  }, [loopNum, isDeleting, text]);
 
   useEffect(() => {
     let ticker = setInterval(() => {
