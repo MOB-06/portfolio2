@@ -86,7 +86,7 @@ export const Skills = () => {
         clearTimeout(autoPlayTimeoutRef.current);
       }
     };
-  }, [isAutoPlaying, currentIndex]);
+  }, [isAutoPlaying, currentIndex, goToNext]);
 
   const goToNext = () => {
     setCurrentIndex((prevIndex) => (prevIndex + 1) % skills.length);
