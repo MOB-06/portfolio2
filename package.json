@@ -2,10 +2,6 @@
   "name": "personal-portfolio",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "animate.css": "^4.1.1",
@@ -17,7 +13,7 @@
     "react-on-screen": "^2.1.1",
     "react-router-dom": "^6.3.0",
     "react-router-hash-link": "^2.4.3",
-    "react-scripts": "5.0.1"
+    "react-scripts": "^0.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
