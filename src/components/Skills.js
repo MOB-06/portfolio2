@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'react-bootstrap-icons';
 
 export const Skills = () => {
@@ -70,6 +70,10 @@ export const Skills = () => {
     };
   }, []);
 
+  const goToNext = useCallback(() => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % skills.length);
+  }, [skills.length]);
+
   // Auto-play functionality
   useEffect(() => {
     if (isAutoPlaying) {
@@ -86,11 +90,7 @@ export const Skills = () => {
         clearTimeout(autoPlayTimeoutRef.current);
       }
     };
-  }, [isAutoPlaying, currentIndex, goToNext]);
-
-  const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % skills.length);
-  };
+  }, [isAutoPlaying, goToNext]);
 
   const goToPrev = () => {
     setIsAutoPlaying(false);
