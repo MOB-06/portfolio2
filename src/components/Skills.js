@@ -141,7 +141,6 @@ export const Skills = () => {
                     
                     const spacing1 = isMobile ? 300 : isTablet ? 360 : 420;
                     const spacing2 = isMobile ? 450 : isTablet ? 550 : 650;
-                    const spacing3 = isMobile ? 600 : isTablet ? 700 : 800;
                     const rotation1 = isMobile ? 25 : 30;
                     const rotation2 = isMobile ? 35 : 40;
                     const scale1 = isMobile ? 0.88 : 0.85;
