@@ -14,7 +14,7 @@ export const Projects = () => {
       title: "Personal Portfolio",
       description: "Modern portfolio with smooth animations and responsive design.",
       tech: ["React", "CSS", "Animations"],
-      github: "https://github.com/MOB-06",
+      github: "https://github.com/MOB-06/portfolio2.git",
     },
     {
       title: "Learning Projects",
