@@ -289,23 +289,23 @@ nav.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
 }
 
 .banner spline-viewer {
-  width: 300%;
-  height: 300%;
+  width: 260%;
+  height: 260%;
   display: block;
-  transform: translate(-25%, -33%);
+  transform: translate(-30%, -30%);
   max-width: none;
   animation: floating 4s ease-in-out infinite;
 }
 
 @keyframes floating {
     0% {
-        transform: translate(-25%, -33%) translateY(0px);
+        transform: translate(-30%, -30%) translateY(0px);
     }
     50% {
-        transform: translate(-25%, -33%) translateY(-20px);
+        transform: translate(-30%, -30%) translateY(-20px);
     }
     100% {
-        transform: translate(-25%, -33%) translateY(0px);
+        transform: translate(-30%, -30%) translateY(0px);
     }
 }
 
@@ -1681,4 +1681,182 @@ nav.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
 .footer-icon:hover {
   transform: scale(1.2);
   opacity: 1;
+}
+/************ Mobile Performance Optimizations ************/
+
+/* Loading state for lazy loaded sections */
+.loading-section {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #B8B8B8;
+  font-size: 18px;
+}
+
+/* Mobile placeholder for 3D viewer */
+.mobile-placeholder-3d {
+  width: 100%;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-orb {
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #AA367C 0%, #4A2FBD 100%);
+  filter: blur(40px);
+  animation: pulse-glow 3s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* Performance hints for animated elements */
+nav.navbar {
+  will-change: padding, background-color;
+}
+
+.skill-card-3d {
+  will-change: transform, opacity;
+}
+
+.banner spline-viewer {
+  will-change: transform;
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Reduce animation complexity on mobile */
+  * {
+    animation-duration: 0.3s !important;
+  }
+  
+  /* Disable heavy background effects on mobile */
+  .about::before {
+    display: none;
+  }
+  
+  /* Simplify banner for mobile */
+  .banner {
+    padding: 180px 0 50px 0;
+    background-size: cover;
+    background-attachment: scroll; /* Disable parallax on mobile */
+  }
+  
+  .banner h1 {
+    font-size: 40px;
+  }
+  
+  .banner p {
+    font-size: 16px;
+    width: 100%;
+  }
+  
+  .banner button {
+    font-size: 18px;
+    margin-top: 30px;
+  }
+  
+  /* Optimize spline viewer for mobile */
+  .banner spline-viewer {
+    display: none; /* Hidden on mobile, replaced with gradient orb */
+  }
+  
+  /* Reduce transforms for better performance */
+  .skill-carousel-wrapper-3d {
+    transform: none;
+    perspective: 800px; /* Reduced perspective */
+  }
+  
+  /* Disable auto-play animations on mobile */
+  .animate__animated {
+    animation-duration: 0.5s !important;
+  }
+  
+  /* Touch optimization */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  /* Simplify navbar for mobile */
+  nav.navbar {
+    padding: 12px 0 !important;
+  }
+  
+  nav.navbar.scrolled {
+    padding: 8px 0 !important;
+  }
+  
+  /* Reduce font sizes for mobile */
+  .about h2,
+  .skill h2,
+  .project h2 {
+    font-size: 32px !important;
+  }
+  
+  /* Optimize images for mobile */
+  img {
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  /* Disable hover effects on touch devices */
+  .social-icon a:hover,
+  .footer-icon:hover,
+  .project-card-new:hover {
+    transform: none !important;
+  }
+  
+  /* Simplify transitions */
+  * {
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* Extra optimizations for very low-end devices */
+@media (max-width: 480px) {
+  /* Further reduce complexity */
+  .skill-carousel-wrapper-3d {
+    perspective: 600px;
+  }
+  
+  .banner h1 {
+    font-size: 32px;
+  }
+  
+  /* Disable complex gradients on very small screens */
+  .gradient-orb {
+    filter: blur(30px);
+  }
+}
+
+/* Additional performance optimizations for all devices */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hardware acceleration for key elements */
+.banner,
+.skill-card-3d,
+.project-card-new,
+nav.navbar {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }

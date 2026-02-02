@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { ArrowRightCircle } from 'react-bootstrap-icons';
 import 'animate.css';
@@ -12,6 +12,17 @@ export const Banner = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [text, setText] = useState('');
   const [delta, setDelta] = useState(300 - Math.random() * 100);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile devices
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const tick = useCallback(() => {
     let i = loopNum % toRotate.length;
@@ -60,8 +71,17 @@ export const Banner = () => {
           <Col xs={12} md={6} xl={5}>
             <TrackVisibility>
               {({ isVisible }) =>
-                <div className={isVisible ? "animate__animated animate__zoomIn" : ""}>
-                  <spline-viewer url="https://prod.spline.design/hkEoFcUm7TwezHY6/scene.splinecode"></spline-viewer>
+                <div className={isVisible && !isMobile ? "animate__animated animate__zoomIn" : ""}>
+                  {!isMobile ? (
+                    <spline-viewer 
+                      url="https://prod.spline.design/hkEoFcUm7TwezHY6/scene.splinecode"
+                      loading="lazy"
+                    ></spline-viewer>
+                  ) : (
+                    <div className="mobile-placeholder-3d">
+                      <div className="gradient-orb"></div>
+                    </div>
+                  )}
                 </div>}
             </TrackVisibility>
           </Col>

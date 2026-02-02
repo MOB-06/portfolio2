@@ -60,10 +60,10 @@ export const Skills = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
         setWindowWidth(window.innerWidth);
-      }, 150);
+      }, 250); // Increased debounce time for better mobile performance
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
     return () => {
       clearTimeout(timeoutId);
       window.removeEventListener('resize', handleResize);
@@ -76,7 +76,9 @@ export const Skills = () => {
 
   // Auto-play functionality
   useEffect(() => {
-    if (isAutoPlaying) {
+    // Disable auto-play on mobile to save battery and reduce lag
+    const isMobile = window.innerWidth <= 768;
+    if (isAutoPlaying && !isMobile) {
       intervalRef.current = setInterval(() => {
         goToNext();
       }, 3500);

@@ -15,32 +15,41 @@ export const NavBar = () => {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    let ticking = false;
+    
     const onScroll = () => {
-      if (window.scrollY > 50) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
-      }
-
-      // Detect active section based on scroll position
-      const sections = ['home', 'about', 'skills', 'projects'];
-      const scrollPosition = window.scrollY + 100; // offset for better detection
-
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const offsetTop = element.offsetTop;
-          const offsetHeight = element.offsetHeight;
-          
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveLink(section);
-            break;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          if (window.scrollY > 50) {
+            setScrolled(true);
+          } else {
+            setScrolled(false);
           }
-        }
+
+          // Detect active section based on scroll position
+          const sections = ['home', 'about', 'skills', 'projects'];
+          const scrollPosition = window.scrollY + 100; // offset for better detection
+
+          for (const section of sections) {
+            const element = document.getElementById(section);
+            if (element) {
+              const offsetTop = element.offsetTop;
+              const offsetHeight = element.offsetHeight;
+              
+              if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+                setActiveLink(section);
+                break;
+              }
+            }
+          }
+          
+          ticking = false;
+        });
+        ticking = true;
       }
     }
 
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     onScroll(); // Call once on mount
 
     return () => window.removeEventListener("scroll", onScroll);
@@ -66,10 +75,10 @@ export const NavBar = () => {
             </Nav>
             <span className="navbar-text">
               <div className="social-icon">
-                <a href="https://github.com/MOB-06" target="_blank" rel="noopener noreferrer"><img src={githubIcon} alt="GitHub" /></a>
-                <a href="https://www.linkedin.com/in/ajit-adhikari-58091a3a1" target="_blank" rel="noopener noreferrer"><img src={linkedinIcon} alt="LinkedIn" /></a>
-                <a href="https://www.instagram.com/e_re_b_us?igsh=MXU1dzB1aGxkYTJtZw==" target="_blank" rel="noopener noreferrer"><img src={instagramIcon} alt="Instagram" /></a>
-                <a href="mailto:ajitadhiakari18@gmail.com"><img src={emailIcon} alt="Email" /></a>
+                <a href="https://github.com/MOB-06" target="_blank" rel="noopener noreferrer"><img src={githubIcon} alt="GitHub" loading="lazy" /></a>
+                <a href="https://www.linkedin.com/in/ajit-adhikari-58091a3a1" target="_blank" rel="noopener noreferrer"><img src={linkedinIcon} alt="LinkedIn" loading="lazy" /></a>
+                <a href="https://www.instagram.com/e_re_b_us?igsh=MXU1dzB1aGxkYTJtZw==" target="_blank" rel="noopener noreferrer"><img src={instagramIcon} alt="Instagram" loading="lazy" /></a>
+                <a href="mailto:ajitadhiakari18@gmail.com"><img src={emailIcon} alt="Email" loading="lazy" /></a>
               </div>
               <HashLink to='#connect'>
                 <button className="vvd"><span>Let’s Connect</span></button>
