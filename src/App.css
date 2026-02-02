@@ -297,6 +297,44 @@ nav.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
   animation: floating 4s ease-in-out infinite;
 }
 
+/* Responsive 3D viewer sizes */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .banner spline-viewer {
+    width: 200%;
+    height: 200%;
+    transform: translate(-25%, -25%);
+    animation: floating 5s ease-in-out infinite;
+  }
+}
+
+@media (max-width: 768px) {
+  .banner spline-viewer {
+    width: 185%;
+    height: 185%;
+    transform: translate(-23%, -23%);
+    animation: none;
+  }
+  
+  /* Hide Spline branding on mobile */
+  .banner spline-viewer #logo {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .banner spline-viewer {
+    width: 165%;
+    height: 165%;
+    transform: translate(-20%, -20%);
+    animation: none;
+  }
+  
+  /* Hide Spline branding on small phones */
+  .banner spline-viewer #logo {
+    display: none !important;
+  }
+}
+
 @keyframes floating {
     0% {
         transform: translate(-30%, -30%) translateY(0px);
@@ -307,6 +345,20 @@ nav.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
     100% {
         transform: translate(-30%, -30%) translateY(0px);
     }
+}
+
+@media (max-width: 768px) {
+  @keyframes floating {
+    0% {
+        transform: translate(-17%, -17%) translateY(0px);
+    }
+    50% {
+        transform: translate(-17%, -17%) translateY(-10px);
+    }
+    100% {
+        transform: translate(-17%, -17%) translateY(0px);
+    }
+  }
 }
 
 @keyframes updown {
@@ -1703,26 +1755,120 @@ nav.navbar .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
   justify-content: center;
   position: relative;
   overflow: hidden;
+  background: transparent;
 }
 
 .gradient-orb {
-  width: 250px;
-  height: 250px;
+  width: 280px;
+  height: 280px;
   border-radius: 50%;
   background: linear-gradient(135deg, #AA367C 0%, #4A2FBD 100%);
-  filter: blur(40px);
-  animation: pulse-glow 3s ease-in-out infinite;
-  opacity: 0.8;
+  filter: blur(50px);
+  animation: breathing 6s ease-in-out infinite;
+  opacity: 0.75;
+  position: relative;
 }
 
-@keyframes pulse-glow {
+/* Floating dots around the orb */
+.mobile-placeholder-3d::before,
+.mobile-placeholder-3d::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(170, 54, 124, 0.6), transparent);
+  animation: float-around 12s ease-in-out infinite;
+}
+
+.mobile-placeholder-3d::before {
+  width: 60px;
+  height: 60px;
+  top: 20%;
+  left: 15%;
+  filter: blur(15px);
+  animation: float-around 10s ease-in-out infinite;
+}
+
+.mobile-placeholder-3d::after {
+  width: 80px;
+  height: 80px;
+  bottom: 25%;
+  right: 10%;
+  filter: blur(20px);
+  background: radial-gradient(circle, rgba(74, 47, 189, 0.5), transparent);
+  animation: float-around 11s ease-in-out infinite reverse;
+}
+
+/* Additional floating dots */
+.gradient-orb::before,
+.gradient-orb::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(10px);
+}
+
+.gradient-orb::before {
+  width: 40px;
+  height: 40px;
+  top: -10%;
+  right: 10%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4), transparent);
+  animation: drift 8s ease-in-out infinite;
+}
+
+.gradient-orb::after {
+  width: 50px;
+  height: 50px;
+  bottom: 0%;
+  left: 5%;
+  background: radial-gradient(circle, rgba(170, 54, 124, 0.5), transparent);
+  animation: drift 9s ease-in-out infinite reverse;
+}
+
+@keyframes breathing {
   0%, 100% {
     transform: scale(1);
-    opacity: 0.8;
+    opacity: 0.75;
+    filter: blur(50px);
   }
   50% {
     transform: scale(1.1);
-    opacity: 1;
+    opacity: 0.85;
+    filter: blur(52px);
+  }
+}
+
+@keyframes float-around {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translate(25px, -15px) scale(1.05);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translate(8px, 25px) scale(0.95);
+    opacity: 0.45;
+  }
+  75% {
+    transform: translate(-15px, 8px) scale(1.02);
+    opacity: 0.6;
+  }
+}
+
+@keyframes drift {
+  0%, 100% {
+    transform: translate(0, 0);
+    opacity: 0.35;
+  }
+  33% {
+    transform: translate(12px, -20px);
+    opacity: 0.55;
+  }
+  66% {
+    transform: translate(-8px, 12px);
+    opacity: 0.45;
   }
 }
 
@@ -1772,10 +1918,7 @@ nav.navbar {
     margin-top: 30px;
   }
   
-  /* Optimize spline viewer for mobile */
-  .banner spline-viewer {
-    display: none; /* Hidden on mobile, replaced with gradient orb */
-  }
+  /* Spline viewer is now responsive and visible on all devices */
   
   /* Reduce transforms for better performance */
   .skill-carousel-wrapper-3d {
