@@ -2,22 +2,27 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { NavBar } from "./components/NavBar";
 import { Banner } from "./components/Banner";
-import { About } from "./components/About";
-import { Skills } from "./components/Skills";
-import { Projects } from "./components/Projects";
-import { Contact } from "./components/Contact";
-import { Footer } from "./components/Footer";
+import { lazy, Suspense } from "react";
+
+// Lazy load components for better performance
+const About = lazy(() => import("./components/About").then(module => ({ default: module.About })));
+const Skills = lazy(() => import("./components/Skills").then(module => ({ default: module.Skills })));
+const Projects = lazy(() => import("./components/Projects").then(module => ({ default: module.Projects })));
+const Contact = lazy(() => import("./components/Contact").then(module => ({ default: module.Contact })));
+const Footer = lazy(() => import("./components/Footer").then(module => ({ default: module.Footer })));
 
 function App() {
   return (
     <div className="App">
       <NavBar />
       <Banner />
-      <About />
-      <Skills />
-      <Projects />
-      <Contact />
-      <Footer />
+      <Suspense fallback={<div className="loading-section">Loading...</div>}>
+        <About />
+        <Skills />
+        <Projects />
+        <Contact />
+        <Footer />
+      </Suspense>
     </div>
   );
 }
