@@ -277,8 +277,7 @@ const Tetris = () => {
                   key={x}
                   className="cell"
                   style={{
-                    backgroundColor: cell || '#1a1a1a',
-                    border: cell ? '1px solid #333' : '1px solid #333'
+                    backgroundColor: cell || '#1a1a1a'
                   }}
                 />
               ))}
