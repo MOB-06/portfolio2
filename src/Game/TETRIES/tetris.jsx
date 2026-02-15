@@ -6,6 +6,15 @@ const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
 const EMPTY_CELL = 0;
 
+// Scoring system: points awarded for clearing lines
+// 1 line = 100, 2 lines = 300, 3 lines = 500, 4 lines = 800
+const POINTS_PER_LINES = [0, 100, 300, 500, 800];
+
+// Drop speed configuration
+const MIN_DROP_SPEED = 100; // Minimum time between drops (fastest)
+const BASE_DROP_SPEED = 1000; // Initial drop speed (slowest)
+const SPEED_INCREASE_PER_LEVEL = 100; // Speed increase per level
+
 // Tetromino shapes
 const SHAPES = {
   I: [[1, 1, 1, 1]],
@@ -174,7 +183,7 @@ const Tetris = () => {
       const { newBoard, linesCleared } = clearLines(mergedBoard);
       
       if (linesCleared > 0) {
-        const points = [0, 100, 300, 500, 800][linesCleared];
+        const points = POINTS_PER_LINES[linesCleared];
         setScore(prev => prev + points * level);
         setLines(prev => {
           const newLines = prev + linesCleared;
@@ -274,7 +283,7 @@ const Tetris = () => {
       return;
     }
 
-    dropSpeedRef.current = Math.max(100, 1000 - (level - 1) * 100);
+    dropSpeedRef.current = Math.max(MIN_DROP_SPEED, BASE_DROP_SPEED - (level - 1) * SPEED_INCREASE_PER_LEVEL);
     
     gameLoopRef.current = setInterval(() => {
       dropPiece();
