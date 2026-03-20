@@ -27,7 +27,7 @@ export const NavBar = () => {
           }
 
           // Detect active section based on scroll position
-          const sections = ['home', 'about', 'skills', 'projects'];
+          const sections = ['home', 'about', 'skills', 'projects', 'games'];
           const scrollPosition = window.scrollY + 100; // offset for better detection
 
           for (const section of sections) {
@@ -72,6 +72,7 @@ export const NavBar = () => {
               <Nav.Link href="#about" className={activeLink === 'about' ? 'active navbar-link' : 'navbar-link'} onClick={() => onUpdateActiveLink('about')}>About</Nav.Link>
               <Nav.Link href="#skills" className={activeLink === 'skills' ? 'active navbar-link' : 'navbar-link'} onClick={() => onUpdateActiveLink('skills')}>Skills</Nav.Link>
               <Nav.Link href="#projects" className={activeLink === 'projects' ? 'active navbar-link' : 'navbar-link'} onClick={() => onUpdateActiveLink('projects')}>Projects</Nav.Link>
+              <Nav.Link href="#games" className={activeLink === 'games' ? 'active navbar-link' : 'navbar-link'} onClick={() => onUpdateActiveLink('games')}>Games</Nav.Link>
             </Nav>
             <span className="navbar-text">
               <div className="social-icon">

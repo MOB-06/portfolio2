@@ -2003,3 +2003,103 @@ nav.navbar {
   backface-visibility: hidden;
   perspective: 1000px;
 }
+
+/************ Games Css ************/
+.games {
+  padding: 80px 0;
+  background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.games::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, white, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 70px 100px, white, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 130px 50px, white, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 180px 140px, white, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 220px 220px;
+  opacity: 0.45;
+  z-index: 0;
+}
+
+.games > * {
+  position: relative;
+  z-index: 1;
+}
+
+.games-bx {
+  text-align: center;
+}
+
+.games h2 {
+  font-size: 45px;
+  font-weight: 700;
+  background: linear-gradient(90.21deg, #AA367C -5.91%, #4A2FBD 111.58%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+}
+
+.games-underline {
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90.21deg, #AA367C -5.91%, #4A2FBD 111.58%);
+  margin: 0 auto 20px;
+  border-radius: 2px;
+}
+
+.games p {
+  color: #B8B8B8;
+  font-size: 18px;
+  letter-spacing: 0.8px;
+  line-height: 1.5em;
+  margin-bottom: 28px;
+}
+
+.game-embed-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.game-frame {
+  width: 100%;
+  height: 720px;
+  border: 0;
+  border-radius: 12px;
+  background: #050810;
+}
+
+.game-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 992px) {
+  .game-frame {
+    height: 620px;
+  }
+}
+
+@media (max-width: 768px) {
+  .games h2 {
+    font-size: 35px;
+  }
+
+  .games p {
+    font-size: 16px;
+  }
+
+  .game-frame {
+    height: 520px;
+  }
+}

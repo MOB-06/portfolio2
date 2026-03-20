@@ -8,6 +8,7 @@ import { lazy, Suspense } from "react";
 const About = lazy(() => import("./components/About").then(module => ({ default: module.About })));
 const Skills = lazy(() => import("./components/Skills").then(module => ({ default: module.Skills })));
 const Projects = lazy(() => import("./components/Projects").then(module => ({ default: module.Projects })));
+const Games = lazy(() => import("./components/Games").then(module => ({ default: module.Games })));
 const Contact = lazy(() => import("./components/Contact").then(module => ({ default: module.Contact })));
 const Footer = lazy(() => import("./components/Footer").then(module => ({ default: module.Footer })));
 
@@ -20,6 +21,7 @@ function App() {
         <About />
         <Skills />
         <Projects />
+        <Games />
         <Contact />
         <Footer />
       </Suspense>

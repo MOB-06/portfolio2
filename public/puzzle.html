@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PokéPuzzle — Sliding Puzzle Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Exo+2:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400&display=swap" rel="stylesheet" />
+  <style>
+/* =========================================================
+   PokéPuzzle — Style Sheet
+   Aesthetic: Pokédex Terminal — Dark retro-futuristic gaming
+   ========================================================= */
+
+/* ── Variables ─────────────────────────────────────────── */
+:root {
+  --bg-void:       #050810;
+  --bg-deep:       #0a0f1e;
+  --bg-card:       #0e1528;
+  --bg-card2:      #131b30;
+  --bg-hover:      #1a2340;
+
+  --border-subtle: rgba(255,255,255,0.07);
+  --border-glow:   rgba(255,220,0,0.35);
+
+  --yellow:        #ffd700;
+  --yellow-dim:    #c8a800;
+  --yellow-glow:   rgba(255,215,0,0.18);
+  --red:           #e63946;
+  --red-dim:       #9e1b25;
+  --red-glow:      rgba(230,57,70,0.20);
+  --blue:          #4fc3f7;
+  --blue-glow:     rgba(79,195,247,0.20);
+  --green:         #69f0ae;
+
+  --text-primary:  #f0f4ff;
+  --text-secondary:#8899bb;
+  --text-muted:    #4a5a7a;
+
+  --tile-bg:       #1c2842;
+  --tile-border:   rgba(255,215,0,0.20);
+  --tile-empty:    #070c18;
+
+  --radius-sm:     6px;
+  --radius-md:     12px;
+  --radius-lg:     20px;
+
+  --shadow-card:   0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-glow-y: 0 0 20px rgba(255,215,0,0.3), 0 0 60px rgba(255,215,0,0.1);
+  --shadow-glow-r: 0 0 20px rgba(230,57,70,0.4);
+
+  --font-pixel:    'Press Start 2P', monospace;
+  --font-ui:       'Exo 2', sans-serif;
+
+  --tile-gap:      3px;
+  --board-size:    460px;
+  --anim-tile:     120ms;
+}
+
+/* ── Reset ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-ui);
+  background: var(--bg-void);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── Background Canvas ──────────────────────────────────── */
+#bgCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
+
+/* ── Scanlines ──────────────────────────────────────────── */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.10) 2px,
+    rgba(0,0,0,0.10) 4px
+  );
+}
+
+/* ── App Wrapper ────────────────────────────────────────── */
+.app-wrapper {
+  position: relative;
+  z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.site-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 0 24px;
+}
+
+/* Pokéball Icon */
+.pokeball-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 3px solid var(--text-muted);
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: 0 0 18px rgba(230,57,70,0.35);
+  animation: pokeballSpin 8s linear infinite;
+}
+.pokeball-top    { height: 50%; background: var(--red); }
+.pokeball-bottom { height: 50%; background: var(--text-primary); }
+.pokeball-center {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%; height: 5px;
+  background: #333;
+  display: flex; align-items: center; justify-content: center;
+}
+.pokeball-btn {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #eee;
+  border: 3px solid #333;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+}
+@keyframes pokeballSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.game-title {
+  font-family: var(--font-pixel);
+  font-size: clamp(1rem, 2.8vw, 1.6rem);
+  color: var(--yellow);
+  text-shadow: var(--shadow-glow-y);
+  letter-spacing: 2px;
+  line-height: 1.3;
+}
+.game-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  font-weight: 300;
+}
+
+/* ── Main Layout ────────────────────────────────────────── */
+.main-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 220px;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Panels ─────────────────────────────────────────────── */
+.control-panel,
+.leaderboard-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: var(--shadow-card);
+  position: sticky;
+  top: 16px;
+}
+
+.panel-section { display: flex; flex-direction: column; gap: 10px; }
+
+.panel-label {
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
+  color: var(--yellow);
+  letter-spacing: 2px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+}
+
+/* ── Difficulty Buttons ─────────────────────────────────── */
+.difficulty-buttons { display: flex; flex-direction: column; gap: 6px; }
+
+.diff-btn {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  font-family: var(--font-ui);
+}
+.diff-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--yellow-dim);
+  color: var(--text-primary);
+  transform: translateX(3px);
+}
+.diff-btn.active {
+  background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04));
+  border-color: var(--yellow);
+  color: var(--yellow);
+  box-shadow: inset 0 0 12px rgba(255,215,0,0.08), 0 0 12px rgba(255,215,0,0.12);
+}
+.diff-icon { font-size: 0.65rem; }
+.diff-name { font-weight: 700; font-size: 0.85rem; letter-spacing: 1px; }
+.diff-grid {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-family: var(--font-pixel);
+}
+.diff-btn.active .diff-grid { color: var(--yellow-dim); }
+
+/* ── Pokémon Selector ───────────────────────────────────── */
+.pokemon-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.poke-card {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card2);
+  border: 2px solid var(--border-subtle);
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.2s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+.poke-card img {
+  width: 80%; height: 80%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  transition: transform 0.2s ease;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+}
+.poke-card:hover { border-color: var(--yellow-dim); background: var(--bg-hover); }
+.poke-card:hover img { transform: scale(1.12); }
+.poke-card.selected {
+  border-color: var(--yellow);
+  box-shadow: 0 0 14px rgba(255,215,0,0.35), inset 0 0 10px rgba(255,215,0,0.08);
+  background: linear-gradient(135deg, rgba(255,215,0,0.10), var(--bg-card2));
+}
+.poke-card .poke-num {
+  position: absolute; bottom: 2px; left: 0; right: 0;
+  text-align: center;
+  font-size: 0.45rem;
+  font-family: var(--font-pixel);
+  color: var(--text-muted);
+}
+.poke-card.selected .poke-num { color: var(--yellow-dim); }
+
+/* ── Stats Section ──────────────────────────────────────── */
+.stats-section { background: var(--bg-card2); border-radius: var(--radius-md); padding: 12px; }
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label {
+  font-family: var(--font-pixel);
+  font-size: 0.45rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.stat-value {
+  font-family: var(--font-pixel);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  transition: color 0.3s, text-shadow 0.3s;
+}
+.stat-value.highlight { color: var(--yellow); text-shadow: 0 0 8px rgba(255,215,0,0.4); }
+.stat-value.pulse {
+  animation: statPulse 0.4s ease;
+}
+@keyframes statPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.25); color: var(--yellow); }
+  100% { transform: scale(1); }
+}
+
+/* ── Best Scores ────────────────────────────────────────── */
+.best-scores { display: flex; flex-direction: column; gap: 4px; }
+.best-score-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.72rem;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card2);
+}
+.bsr-diff { color: var(--text-muted); font-size: 0.65rem; }
+.bsr-val  { color: var(--yellow); font-family: var(--font-pixel); font-size: 0.55rem; }
+.bsr-none { color: var(--text-muted); font-size: 0.7rem; font-style: italic; }
+
+/* ── Action Buttons ─────────────────────────────────────── */
+.action-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
+.action-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-transform: uppercase;
+}
+.action-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #e63946, #c62030);
+  color: white;
+  box-shadow: 0 4px 16px rgba(230,57,70,0.35);
+}
+.action-btn.primary:hover {
+  background: linear-gradient(135deg, #ff4757, #e63946);
+  box-shadow: 0 6px 24px rgba(230,57,70,0.55);
+  transform: translateY(-2px);
+}
+.action-btn.primary:active { transform: translateY(0); }
+
+.action-btn.secondary {
+  background: var(--bg-card2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+.action-btn.secondary:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--blue);
+  box-shadow: 0 0 12px var(--blue-glow);
+  transform: translateY(-2px);
+}
+.action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+/* ── Board Area ─────────────────────────────────────────── */
+.board-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.board-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.pokemon-name-display {
+  display: flex; align-items: baseline; gap: 8px;
+}
+.pokedex-num {
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+.poke-name {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.live-stats { display: flex; gap: 16px; }
+.live-stat {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-pixel);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+.live-stat svg { width: 14px; height: 14px; color: var(--yellow); }
+
+/* ── Puzzle Container ───────────────────────────────────── */
+.puzzle-container {
+  position: relative;
+  background: var(--bg-deep);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  box-shadow: var(--shadow-card), 0 0 60px rgba(255,215,0,0.04);
+  overflow: hidden;
+}
+
+.puzzle-container::before,
+.puzzle-container::after {
+  content: '';
+  position: absolute;
+  width: 20px; height: 20px;
+  border-color: var(--yellow);
+  border-style: solid;
+  opacity: 0.5;
+}
+.puzzle-container::before {
+  top: 6px; left: 6px;
+  border-width: 2px 0 0 2px;
+  border-radius: 4px 0 0 0;
+}
+.puzzle-container::after {
+  bottom: 6px; right: 6px;
+  border-width: 0 2px 2px 0;
+  border-radius: 0 0 4px 0;
+}
+
+/* ── Puzzle Board ───────────────────────────────────────── */
+.puzzle-board {
+  display: grid;
+  gap: var(--tile-gap);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* ── Tile ───────────────────────────────────────────────── */
+.tile {
+  aspect-ratio: 1;
+  background: var(--tile-bg);
+  border: 1px solid var(--tile-border);
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform var(--anim-tile) cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
+  background-size: var(--bg-size);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 60%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+.tile:hover:not(.empty):not(.no-move) {
+  transform: scale(1.04);
+  box-shadow: 0 0 14px rgba(255,215,0,0.3);
+  border-color: rgba(255,215,0,0.55);
+  z-index: 2;
+}
+.tile:active:not(.empty) { transform: scale(0.96); }
+
+.tile.movable {
+  border-color: rgba(255,215,0,0.45);
+  cursor: pointer;
+}
+.tile.movable::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,215,0,0.06);
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tile.empty {
+  background: var(--tile-empty) !important;
+  border: 2px dashed rgba(255,255,255,0.06) !important;
+  cursor: default !important;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+}
+.tile.empty::after { display: none; }
+.tile.empty::before { display: none; }
+
+.tile.sliding {
+  animation: tilePop var(--anim-tile) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes tilePop {
+  0%   { transform: scale(0.88); }
+  60%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+.tile-num {
+  position: absolute;
+  bottom: 3px; right: 5px;
+  font-family: var(--font-pixel);
+  font-size: 0.45rem;
+  color: rgba(255,255,255,0.3);
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ── Preview Overlay ────────────────────────────────────── */
+.preview-overlay {
+  position: absolute;
+  inset: 12px;
+  background: var(--bg-deep);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 10;
+}
+.preview-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.preview-overlay img {
+  max-width: 90%; max-height: 85%;
+  object-fit: contain;
+  border-radius: 8px;
+  filter: drop-shadow(0 4px 24px rgba(255,215,0,0.25));
+}
+.preview-label {
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
+  color: var(--yellow);
+  letter-spacing: 4px;
+  opacity: 0.7;
+}
+
+/* ── Start Prompt ───────────────────────────────────────── */
+.start-prompt {
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(5,8,16,0.9);
+  border-radius: var(--radius-lg);
+  z-index: 10;
+  backdrop-filter: blur(4px);
+  transition: opacity 0.4s ease;
+}
+.start-prompt.hidden { opacity: 0; pointer-events: none; }
+.start-prompt-inner {
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.start-prompt-inner p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+.start-prompt-inner strong { color: var(--yellow); }
+
+.pokeball-spin {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, var(--red) 50%, white 50%);
+  border: 4px solid var(--text-muted);
+  position: relative;
+  animation: spinPoke 2s linear infinite;
+}
+.pokeball-spin::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px; height: 16px;
+  background: #eee;
+  border-radius: 50%;
+  border: 3px solid var(--text-muted);
+  z-index: 1;
+}
+.pokeball-spin::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  height: 4px;
+  background: var(--text-muted);
+  transform: translateY(-50%);
+}
+@keyframes spinPoke {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── Board Footer ───────────────────────────────────────── */
+.board-footer {
+  width: 100%;
+  text-align: center;
+}
+.board-tip {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Leaderboard ────────────────────────────────────────── */
+.leaderboard-tabs {
+  display: flex; gap: 4px;
+}
+.lb-tab {
+  flex: 1;
+  padding: 6px 4px;
+  background: var(--bg-card2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.lb-tab.active {
+  background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05));
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+.lb-tab:hover:not(.active) {
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+
+.leaderboard-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 120px;
+}
+.lb-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-card2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  animation: fadeInUp 0.3s ease both;
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.lb-rank {
+  font-family: var(--font-pixel);
+  font-size: 0.5rem;
+  width: 20px;
+  text-align: center;
+}
+.lb-rank.gold   { color: #ffd700; }
+.lb-rank.silver { color: #c0c0c0; }
+.lb-rank.bronze { color: #cd7f32; }
+.lb-rank.other  { color: var(--text-muted); }
+
+.lb-info { flex: 1; min-width: 0; }
+.lb-score {
+  font-family: var(--font-pixel);
+  font-size: 0.6rem;
+  color: var(--yellow);
+}
+.lb-details {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.lb-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+  width: 100%;
+}
+
+.clear-lb-btn {
+  background: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  padding: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-family: var(--font-ui);
+  transition: all 0.15s ease;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.clear-lb-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-glow); }
+
+/* ── Win Modal ──────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5,8,16,0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+.modal-backdrop[hidden] { display: none; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,215,0,0.3);
+  border-radius: var(--radius-lg);
+  padding: 40px 36px 32px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 80px rgba(255,215,0,0.15), var(--shadow-card);
+  animation: modalBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalBounce {
+  from { transform: scale(0.6) translateY(40px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.modal-confetti {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.trophy-anim {
+  font-size: 3.5rem;
+  display: block;
+  position: relative;
+  z-index: 1;
+  animation: trophyBounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+  filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));
+}
+@keyframes trophyBounce {
+  from { transform: scale(0) rotate(-20deg); }
+  to   { transform: scale(1) rotate(0deg); }
+}
+
+.modal-title {
+  font-family: var(--font-pixel);
+  font-size: clamp(0.9rem, 3vw, 1.2rem);
+  color: var(--yellow);
+  text-shadow: var(--shadow-glow-y);
+  margin: 12px 0 6px;
+  position: relative; z-index: 1;
+  letter-spacing: 2px;
+}
+.modal-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  position: relative; z-index: 1;
+  margin-bottom: 24px;
+}
+.modal-subtitle strong { color: var(--text-primary); }
+
+.modal-stats {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 16px;
+  position: relative; z-index: 1;
+}
+.modal-stat {
+  flex: 1;
+  padding: 14px 8px;
+  background: var(--bg-card2);
+  border-right: 1px solid var(--border-subtle);
+  display: flex; flex-direction: column; gap: 4px; align-items: center;
+}
+.modal-stat:last-child { border-right: none; }
+.modal-stat.highlight { background: linear-gradient(135deg, rgba(255,215,0,0.12), rgba(255,215,0,0.04)); }
+.ms-label {
+  font-family: var(--font-pixel);
+  font-size: 0.42rem;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.ms-value {
+  font-family: var(--font-pixel);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+.modal-stat.highlight .ms-value { color: var(--yellow); text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+
+.best-badge {
+  background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.08));
+  border: 1px solid rgba(255,215,0,0.4);
+  border-radius: 50px;
+  padding: 8px 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--yellow);
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+  position: relative; z-index: 1;
+  animation: badgeGlow 1.5s ease infinite alternate;
+}
+.best-badge[hidden] { display: none; }
+@keyframes badgeGlow {
+  from { box-shadow: 0 0 8px rgba(255,215,0,0.2); }
+  to   { box-shadow: 0 0 20px rgba(255,215,0,0.5); }
+}
+
+.modal-actions {
+  display: flex; gap: 10px; justify-content: center;
+  position: relative; z-index: 1;
+}
+.modal-actions .action-btn { min-width: 130px; }
+
+/* ── Confetti Particles ─────────────────────────────────── */
+.confetti-piece {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* ── Solve Animation ────────────────────────────────────── */
+@keyframes solveFlash {
+  0%   { border-color: var(--yellow); box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+  50%  { border-color: var(--green);  box-shadow: 0 0 20px rgba(105,240,174,0.6); }
+  100% { border-color: var(--yellow); box-shadow: 0 0 20px rgba(255,215,0,0.6); }
+}
+.tile.solved-anim {
+  animation: solveFlash 0.5s ease;
+}
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 1000px) {
+  .main-layout {
+    grid-template-columns: 220px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .leaderboard-panel {
+    grid-column: 1 / -1;
+    position: static;
+  }
+  .leaderboard-panel .panel-section { flex-direction: column; }
+}
+
+@media (max-width: 700px) {
+  :root { --board-size: calc(100vw - 48px); }
+  .main-layout { grid-template-columns: 1fr; }
+  .control-panel {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .control-panel > * { flex: 1 1 140px; }
+  .action-buttons { flex-direction: row; }
+  .leaderboard-panel { position: static; }
+  .board-area { padding: 0; }
+  .site-header { padding: 16px 0 14px; }
+  .game-title { font-size: 1rem; }
+}
+
+@media (max-width: 480px) {
+  :root { --board-size: calc(100vw - 32px); }
+  .difficulty-buttons { flex-direction: row; }
+  .diff-btn { padding: 8px 6px; }
+  .diff-icon { display: none; }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── Focus Visible ──────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--yellow);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.tile-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-pixel);
+  font-size: clamp(0.5rem, 2vw, 1rem);
+  color: rgba(255,255,255,0.4);
+  pointer-events: none;
+  z-index: 3;
+}
+  </style>
+</head>
+<body>
+
+  <!-- ===== SCANLINE OVERLAY ===== -->
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- ===== BACKGROUND PARTICLES ===== -->
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+  <!-- ===== MAIN WRAPPER ===== -->
+  <div class="app-wrapper">
+
+    <!-- ===== HEADER ===== -->
+    <header class="site-header">
+      <div class="pokeball-icon" aria-hidden="true">
+        <div class="pokeball-top"></div>
+        <div class="pokeball-center"><div class="pokeball-btn"></div></div>
+        <div class="pokeball-bottom"></div>
+      </div>
+      <div class="header-text">
+        <h1 class="game-title">PokéPuzzle</h1>
+        <p class="game-subtitle">Gotta Solve 'Em All</p>
+      </div>
+    </header>
+
+    <!-- ===== MAIN LAYOUT ===== -->
+    <main class="main-layout">
+
+      <!-- ===== LEFT PANEL — Controls ===== -->
+      <aside class="control-panel" id="controlPanel">
+
+        <!-- Difficulty -->
+        <section class="panel-section">
+          <h2 class="panel-label">DIFFICULTY</h2>
+          <div class="difficulty-buttons" role="group" aria-label="Select difficulty">
+            <button class="diff-btn active" data-size="3" aria-pressed="true">
+              <span class="diff-icon">⭐</span>
+              <span class="diff-name">Easy</span>
+              <span class="diff-grid">3 × 3</span>
+            </button>
+            <button class="diff-btn" data-size="4" aria-pressed="false">
+              <span class="diff-icon">⭐⭐</span>
+              <span class="diff-name">Normal</span>
+              <span class="diff-grid">4 × 4</span>
+            </button>
+            <button class="diff-btn" data-size="5" aria-pressed="false">
+              <span class="diff-icon">⭐⭐⭐</span>
+              <span class="diff-name">Hard</span>
+              <span class="diff-grid">5 × 5</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Pokémon Image Select -->
+        <section class="panel-section">
+          <h2 class="panel-label">CHOOSE POKÉMON</h2>
+          <div class="pokemon-grid" id="pokemonGrid" role="listbox" aria-label="Choose Pokémon"></div>
+        </section>
+
+        <!-- Stats -->
+        <section class="panel-section stats-section">
+          <h2 class="panel-label">STATS</h2>
+          <div class="stat-row">
+            <span class="stat-label">MOVES</span>
+            <span class="stat-value" id="movesDisplay">0</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">TIME</span>
+            <span class="stat-value" id="timerDisplay">00:00</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">SCORE</span>
+            <span class="stat-value highlight" id="scoreDisplay">—</span>
+          </div>
+        </section>
+
+        <!-- Best Scores -->
+        <section class="panel-section">
+          <h2 class="panel-label">BEST SCORES</h2>
+          <div id="bestScores" class="best-scores"></div>
+        </section>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+          <button class="action-btn primary" id="newGameBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            New Game
+          </button>
+          <button class="action-btn secondary" id="previewBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Preview
+          </button>
+        </div>
+
+      </aside>
+
+      <!-- ===== CENTER — Puzzle Board ===== -->
+      <section class="board-area" id="boardArea">
+
+        <div class="board-header">
+          <div class="pokemon-name-display" id="pokemonNameDisplay">
+            <span class="pokedex-num" id="pokedexNum">#025</span>
+            <span class="poke-name" id="pokeName">Pikachu</span>
+          </div>
+          <div class="live-stats">
+            <div class="live-stat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span id="timerLive">00:00</span>
+            </div>
+            <div class="live-stat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span id="movesLive">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Puzzle Container -->
+        <div class="puzzle-container" id="puzzleContainer">
+          <div class="puzzle-board" id="puzzleBoard" role="grid" aria-label="Sliding puzzle board"></div>
+          <!-- Preview overlay -->
+          <div class="preview-overlay" id="previewOverlay" aria-hidden="true">
+            <img id="previewImg" src="" alt="Full puzzle preview" />
+            <span class="preview-label">PREVIEW</span>
+          </div>
+          <!-- Start prompt -->
+          <div class="start-prompt" id="startPrompt">
+            <div class="start-prompt-inner">
+              <div class="pokeball-spin" aria-hidden="true"></div>
+              <p>Press <strong>New Game</strong> to start!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="board-footer">
+          <span class="board-tip">Tap adjacent tiles to move them into the empty space</span>
+        </div>
+
+      </section>
+
+      <!-- ===== RIGHT PANEL — Leaderboard ===== -->
+      <aside class="leaderboard-panel" id="leaderboardPanel">
+        <section class="panel-section">
+          <h2 class="panel-label">LEADERBOARD</h2>
+          <div class="leaderboard-tabs">
+            <button class="lb-tab active" data-diff="3">Easy</button>
+            <button class="lb-tab" data-diff="4">Normal</button>
+            <button class="lb-tab" data-diff="5">Hard</button>
+          </div>
+          <ol class="leaderboard-list" id="leaderboardList"></ol>
+          <button class="clear-lb-btn" id="clearLbBtn">Clear Records</button>
+        </section>
+      </aside>
+
+    </main>
+  </div>
+
+  <!-- ===== WIN MODAL ===== -->
+  <div class="modal-backdrop" id="winModal" role="dialog" aria-modal="true" aria-labelledby="winTitle" hidden>
+    <div class="modal-card">
+      <div class="modal-confetti" id="confettiCanvas" aria-hidden="true"></div>
+      <div class="trophy-anim" aria-hidden="true">🏆</div>
+      <h2 class="modal-title" id="winTitle">PUZZLE SOLVED!</h2>
+      <p class="modal-subtitle" id="winSubtitle">You solved <strong id="winPokemon">Pikachu</strong>!</p>
+      <div class="modal-stats">
+        <div class="modal-stat">
+          <span class="ms-label">TIME</span>
+          <span class="ms-value" id="winTime">00:00</span>
+        </div>
+        <div class="modal-stat">
+          <span class="ms-label">MOVES</span>
+          <span class="ms-value" id="winMoves">0</span>
+        </div>
+        <div class="modal-stat highlight">
+          <span class="ms-label">SCORE</span>
+          <span class="ms-value" id="winScore">0</span>
+        </div>
+      </div>
+      <div class="best-badge" id="bestBadge" hidden>
+        <span>🎖️ NEW BEST SCORE!</span>
+      </div>
+      <div class="modal-actions">
+        <button class="action-btn primary" id="modalNewGame">Play Again</button>
+        <button class="action-btn secondary" id="modalClose">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+/* =========================================================
+   PokéPuzzle — Game Logic
+   ========================================================= */
+
+'use strict';
+
+// ── Pokémon Data ─────────────────────────────────────────
+const POKEMON_LIST = [
+  { id: 25,  name: 'Pikachu',    num: '#025' },
+  { id: 6,   name: 'Charizard',  num: '#006' },
+  { id: 150, name: 'Mewtwo',     num: '#150' },
+  { id: 94,  name: 'Gengar',     num: '#094' },
+  { id: 143, name: 'Snorlax',    num: '#143' },
+  { id: 133, name: 'Eevee',      num: '#133' },
+  { id: 149, name: 'Dragonite',  num: '#149' },
+  { id: 52,  name: 'Meowth',     num: '#052' },
+  { id: 131, name: 'Lapras',     num: '#131' },
+];
+
+const IMG_BASE = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+
+function getPokeUrl(id) {
+  return `${IMG_BASE}${id}.png`;
+}
+
+// ── Constants ────────────────────────────────────────────
+const DIFFICULTY = {
+  3: { name: 'Easy',   shuffles: 100,  scoreBase: 5000,  movePenalty: 8,  timePenalty: 3 },
+  4: { name: 'Normal', shuffles: 200,  scoreBase: 8000,  movePenalty: 12, timePenalty: 5 },
+  5: { name: 'Hard',   shuffles: 400,  scoreBase: 15000, movePenalty: 18, timePenalty: 8 },
+};
+
+const BOARD_PX   = 460;
+const STORAGE_BEST = 'pokepuzzle_best';
+const STORAGE_LB   = 'pokepuzzle_lb';
+const MAX_LB_ENTRIES = 10;
+
+// ── Game State ───────────────────────────────────────────
+const state = {
+  gridSize:    3,
+  tiles:       [],
+  emptyIndex:  0,
+  solved:      [],
+  moves:       0,
+  seconds:     0,
+  timerActive: false,
+  timerRef:    null,
+  gameActive:  false,
+  currentPoke: POKEMON_LIST[0],
+  isAnimating: false,
+  previewOpen: false,
+  touchStartX: 0,
+  touchStartY: 0,
+};
+
+// ── DOM References ───────────────────────────────────────
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+
+const els = {
+  board:           $('puzzleBoard'),
+  container:       $('puzzleContainer'),
+  startPrompt:     $('startPrompt'),
+  previewOverlay:  $('previewOverlay'),
+  previewImg:      $('previewImg'),
+  pokemonGrid:     $('pokemonGrid'),
+  newGameBtn:      $('newGameBtn'),
+  previewBtn:      $('previewBtn'),
+  timerDisplay:    $('timerDisplay'),
+  timerLive:       $('timerLive'),
+  movesDisplay:    $('movesDisplay'),
+  movesLive:       $('movesLive'),
+  scoreDisplay:    $('scoreDisplay'),
+  pokeName:        $('pokeName'),
+  pokedexNum:      $('pokedexNum'),
+  bestScores:      $('bestScores'),
+  leaderboardList: $('leaderboardList'),
+  clearLbBtn:      $('clearLbBtn'),
+  winModal:        $('winModal'),
+  winPokemon:      $('winPokemon'),
+  winTime:         $('winTime'),
+  winMoves:        $('winMoves'),
+  winScore:        $('winScore'),
+  bestBadge:       $('bestBadge'),
+  modalNewGame:    $('modalNewGame'),
+  modalClose:      $('modalClose'),
+  bgCanvas:        $('bgCanvas'),
+};
+
+// ── Solvable Shuffle ─────────────────────────────────────
+function generatePuzzle(size) {
+  const n = size * size;
+  const tiles = Array.from({ length: n }, (_, i) => (i + 1) % n);
+  let emptyIdx = n - 1;
+  const shuffleCount = DIFFICULTY[size].shuffles;
+  let lastMoved = -1;
+
+  for (let i = 0; i < shuffleCount; i++) {
+    const eRow = Math.floor(emptyIdx / size);
+    const eCol = emptyIdx % size;
+    const neighbors = [];
+    if (eRow > 0)        neighbors.push(emptyIdx - size);
+    if (eRow < size - 1) neighbors.push(emptyIdx + size);
+    if (eCol > 0)        neighbors.push(emptyIdx - 1);
+    if (eCol < size - 1) neighbors.push(emptyIdx + 1);
+    const filtered = neighbors.filter(n => n !== lastMoved);
+    const pick = filtered.length ? filtered : neighbors;
+    const chosen = pick[Math.floor(Math.random() * pick.length)];
+    lastMoved = emptyIdx;
+    [tiles[emptyIdx], tiles[chosen]] = [tiles[chosen], tiles[emptyIdx]];
+    emptyIdx = chosen;
+  }
+  return { tiles, emptyIdx };
+}
+
+function getSolvedState(size) {
+  const n = size * size;
+  return Array.from({ length: n }, (_, i) => (i + 1) % n);
+}
+
+function isSolved() {
+  return state.tiles.every((v, i) => v === state.solved[i]);
+}
+
+// ── Timer ────────────────────────────────────────────────
+function startTimer() {
+  if (state.timerActive) return;
+  state.timerActive = true;
+  state.timerRef = setInterval(() => {
+    state.seconds++;
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(state.timerRef);
+  state.timerActive = false;
+}
+
+function resetTimer() {
+  stopTimer();
+  state.seconds = 0;
+  updateTimerDisplay();
+}
+
+function formatTime(secs) {
+  const m = String(Math.floor(secs / 60)).padStart(2, '0');
+  const s = String(secs % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
+
+function updateTimerDisplay() {
+  const t = formatTime(state.seconds);
+  els.timerDisplay.textContent = t;
+  els.timerLive.textContent = t;
+}
+
+// ── Score ────────────────────────────────────────────────
+function calcScore(size, moves, seconds) {
+  const cfg = DIFFICULTY[size];
+  const raw = cfg.scoreBase - (moves * cfg.movePenalty) - (seconds * cfg.timePenalty);
+  return Math.max(raw, 100);
+}
+
+function updateScoreDisplay() {
+  if (!state.gameActive) return;
+  const s = calcScore(state.gridSize, state.moves, state.seconds);
+  els.scoreDisplay.textContent = s.toLocaleString();
+}
+
+// ── Moves ────────────────────────────────────────────────
+function updateMovesDisplay() {
+  els.movesDisplay.textContent = state.moves;
+  els.movesLive.textContent = state.moves;
+  els.movesDisplay.classList.remove('pulse');
+  void els.movesDisplay.offsetWidth;
+  els.movesDisplay.classList.add('pulse');
+}
+
+// ── localStorage ─────────────────────────────────────────
+function getBestScores() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_BEST)) || {}; }
+  catch { return {}; }
+}
+
+function saveBestScore(size, score, moves, seconds) {
+  const best = getBestScores();
+  if (!best[size] || score > best[size].score) {
+    best[size] = { score, moves, seconds };
+    localStorage.setItem(STORAGE_BEST, JSON.stringify(best));
+    return true;
+  }
+  return false;
+}
+
+function getLeaderboard() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_LB)) || { 3: [], 4: [], 5: [] }; }
+  catch { return { 3: [], 4: [], 5: [] }; }
+}
+
+function saveToLeaderboard(size, score, moves, seconds, pokeName) {
+  const lb = getLeaderboard();
+  if (!lb[size]) lb[size] = [];
+  lb[size].push({ score, moves, seconds, pokemon: pokeName, date: Date.now() });
+  lb[size].sort((a, b) => b.score - a.score);
+  lb[size] = lb[size].slice(0, MAX_LB_ENTRIES);
+  localStorage.setItem(STORAGE_LB, JSON.stringify(lb));
+}
+
+function clearLeaderboard() {
+  localStorage.removeItem(STORAGE_LB);
+  localStorage.removeItem(STORAGE_BEST);
+}
+
+// ── Best Scores Panel ────────────────────────────────────
+function renderBestScores() {
+  const best = getBestScores();
+  els.bestScores.innerHTML = '';
+  let any = false;
+  [3, 4, 5].forEach(size => {
+    if (best[size]) {
+      any = true;
+      const row = document.createElement('div');
+      row.className = 'best-score-row';
+      row.innerHTML = `<span class="bsr-diff">${DIFFICULTY[size].name}</span><span class="bsr-val">${best[size].score.toLocaleString()}</span>`;
+      els.bestScores.appendChild(row);
+    }
+  });
+  if (!any) {
+    const empty = document.createElement('p');
+    empty.className = 'bsr-none';
+    empty.textContent = 'No records yet';
+    els.bestScores.appendChild(empty);
+  }
+}
+
+// ── Leaderboard Panel ────────────────────────────────────
+let currentLbDiff = 3;
+
+function renderLeaderboard(size) {
+  size = size || currentLbDiff;
+  currentLbDiff = size;
+  const lb = getLeaderboard();
+  const entries = lb[size] || [];
+  const list = els.leaderboardList;
+  list.innerHTML = '';
+  $$('.lb-tab').forEach(t => {
+    t.classList.toggle('active', parseInt(t.dataset.diff) === size);
+  });
+  if (!entries.length) {
+    const li = document.createElement('li');
+    li.className = 'lb-entry';
+    li.innerHTML = '<span class="lb-empty">No entries yet.<br>Be the first!</span>';
+    list.appendChild(li);
+    return;
+  }
+  const rankClasses = ['gold', 'silver', 'bronze'];
+  const rankSymbols = ['🥇', '🥈', '🥉'];
+  entries.forEach((e, i) => {
+    const li = document.createElement('li');
+    li.className = 'lb-entry';
+    li.style.animationDelay = `${i * 0.04}s`;
+    const rankClass = rankClasses[i] || 'other';
+    const rankLabel = rankSymbols[i] || `#${i + 1}`;
+    li.innerHTML = `
+      <span class="lb-rank ${rankClass}">${rankLabel}</span>
+      <div class="lb-info">
+        <div class="lb-score">${e.score.toLocaleString()}</div>
+        <div class="lb-details">${e.pokemon} · ${e.moves}mv · ${formatTime(e.seconds)}</div>
+      </div>`;
+    list.appendChild(li);
+  });
+}
+
+// ── Pokémon Selector ─────────────────────────────────────
+function renderPokemonSelector() {
+  els.pokemonGrid.innerHTML = '';
+  POKEMON_LIST.forEach((poke, i) => {
+    const card = document.createElement('div');
+    card.className = 'poke-card' + (i === 0 ? ' selected' : '');
+    card.setAttribute('role', 'option');
+    card.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+    card.setAttribute('tabindex', '0');
+    card.dataset.idx = i;
+    const img = document.createElement('img');
+    img.src = getPokeUrl(poke.id);
+    img.alt = poke.name;
+    img.loading = 'lazy';
+    img.width = 60;
+    img.height = 60;
+    const num = document.createElement('span');
+    num.className = 'poke-num';
+    num.textContent = poke.num;
+    card.appendChild(img);
+    card.appendChild(num);
+    card.addEventListener('click', () => selectPokemon(i));
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') selectPokemon(i); });
+    els.pokemonGrid.appendChild(card);
+  });
+}
+
+function selectPokemon(idx) {
+  $$('.poke-card').forEach((c, i) => {
+    c.classList.toggle('selected', i === idx);
+    c.setAttribute('aria-selected', i === idx ? 'true' : 'false');
+  });
+  state.currentPoke = POKEMON_LIST[idx];
+  updatePokeHeader();
+  if (state.gameActive) initGame(false);
+}
+
+function updatePokeHeader() {
+  els.pokeName.textContent = state.currentPoke.name;
+  els.pokedexNum.textContent = state.currentPoke.num;
+}
+
+// ── Board Rendering ──────────────────────────────────────
+function calcTileSize(gridSize) {
+  const gap = 3;
+  const padding = 24;
+  const containerWidth = Math.min(BOARD_PX, (els.container.parentElement ? els.container.parentElement.clientWidth : BOARD_PX)) - padding;
+  return Math.floor((containerWidth - gap * (gridSize - 1)) / gridSize);
+}
+
+function renderBoard() {
+  const size = state.gridSize;
+  const tileSize = calcTileSize(size);
+  const imgUrl = getPokeUrl(state.currentPoke.id);
+
+  els.board.innerHTML = '';
+  els.board.style.gridTemplateColumns = `repeat(${size}, ${tileSize}px)`;
+  els.board.style.gridTemplateRows    = `repeat(${size}, ${tileSize}px)`;
+
+  state.tiles.forEach((value, position) => {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    tile.dataset.pos   = position;
+    tile.dataset.value = value;
+
+    if (value === 0) {
+      tile.classList.add('empty');
+    } else {
+      const origPos = value - 1;
+      const origRow = Math.floor(origPos / size);
+      const origCol = origPos % size;
+      tile.style.backgroundImage    = `url('${imgUrl}')`;
+      tile.style.backgroundSize     = `${size * 100}%`;
+      tile.style.backgroundPosition = `${origCol * (100 / (size - 1))}% ${origRow * (100 / (size - 1))}%`;
+      if (isAdjacentToEmpty(position)) tile.classList.add('movable');
+      const numEl = document.createElement('span');
+      numEl.className = 'tile-num';
+      numEl.textContent = value;
+      tile.appendChild(numEl);
+      tile.setAttribute('aria-label', `Tile ${value}`);
+      tile.setAttribute('role', 'gridcell');
+      tile.setAttribute('tabindex', '0');
+    }
+
+    tile.addEventListener('click',   () => handleTileClick(position));
+    tile.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') handleTileClick(position); });
+    els.board.appendChild(tile);
+  });
+
+  els.previewImg.src = imgUrl;
+}
+
+function isAdjacentToEmpty(pos) {
+  const size = state.gridSize;
+  const ePos = state.emptyIndex;
+  const pRow = Math.floor(pos  / size), pCol = pos  % size;
+  const eRow = Math.floor(ePos / size), eCol = ePos % size;
+  return (pRow === eRow && Math.abs(pCol - eCol) === 1) ||
+         (pCol === eCol && Math.abs(pRow - eRow) === 1);
+}
+
+// ── Tile Click Handler ───────────────────────────────────
+function handleTileClick(pos) {
+  if (!state.gameActive || state.isAnimating) return;
+  if (state.tiles[pos] === 0) return;
+  if (!isAdjacentToEmpty(pos)) return;
+  startTimer();
+  moveTile(pos);
+}
+
+function moveTile(pos) {
+  const ePos = state.emptyIndex;
+  [state.tiles[pos], state.tiles[ePos]] = [state.tiles[ePos], state.tiles[pos]];
+  state.emptyIndex = pos;
+  state.moves++;
+  updateMovesDisplay();
+  updateScoreDisplay();
+  state.isAnimating = true;
+  renderBoard();
+  const movedTile = els.board.querySelector(`[data-pos="${ePos}"]`);
+  if (movedTile) {
+    movedTile.classList.add('sliding');
+    movedTile.addEventListener('animationend', () => {
+      movedTile.classList.remove('sliding');
+      state.isAnimating = false;
+      checkWin();
+    }, { once: true });
+  } else {
+    state.isAnimating = false;
+    checkWin();
+  }
+  playMoveSound();
+}
+
+// ── Keyboard Controls ────────────────────────────────────
+function handleKeyboard(e) {
+  if (!state.gameActive || state.previewOpen) return;
+  const size = state.gridSize;
+  const ePos = state.emptyIndex;
+  const eRow = Math.floor(ePos / size);
+  const eCol = ePos % size;
+  let targetPos = -1;
+  if (e.key === 'ArrowUp'    && eRow < size - 1) targetPos = ePos + size;
+  if (e.key === 'ArrowDown'  && eRow > 0)        targetPos = ePos - size;
+  if (e.key === 'ArrowLeft'  && eCol < size - 1) targetPos = ePos + 1;
+  if (e.key === 'ArrowRight' && eCol > 0)        targetPos = ePos - 1;
+  if (targetPos >= 0) { e.preventDefault(); handleTileClick(targetPos); }
+}
+
+// ── Swipe Gestures ───────────────────────────────────────
+function setupSwipe() {
+  els.board.addEventListener('touchstart', e => {
+    state.touchStartX = e.touches[0].clientX;
+    state.touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  els.board.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - state.touchStartX;
+    const dy = e.changedTouches[0].clientY - state.touchStartY;
+    const absDx = Math.abs(dx), absDy = Math.abs(dy);
+    if (Math.max(absDx, absDy) < 30) return;
+    const size = state.gridSize;
+    const ePos = state.emptyIndex;
+    const eRow = Math.floor(ePos / size), eCol = ePos % size;
+    let targetPos = -1;
+    if (absDx > absDy) {
+      if (dx > 0 && eCol > 0)        targetPos = ePos - 1;
+      if (dx < 0 && eCol < size - 1) targetPos = ePos + 1;
+    } else {
+      if (dy > 0 && eRow > 0)        targetPos = ePos - size;
+      if (dy < 0 && eRow < size - 1) targetPos = ePos + size;
+    }
+    if (targetPos >= 0) handleTileClick(targetPos);
+  }, { passive: true });
+}
+
+// ── Win Detection ────────────────────────────────────────
+function checkWin() {
+  if (!isSolved()) return;
+  stopTimer();
+  state.gameActive = false;
+  const finalScore = calcScore(state.gridSize, state.moves, state.seconds);
+  const isNewBest  = saveBestScore(state.gridSize, finalScore, state.moves, state.seconds);
+  saveToLeaderboard(state.gridSize, finalScore, state.moves, state.seconds, state.currentPoke.name);
+  const tiles = els.board.querySelectorAll('.tile:not(.empty)');
+  tiles.forEach((t, i) => { setTimeout(() => t.classList.add('solved-anim'), i * 30); });
+  setTimeout(() => showWinModal(finalScore, isNewBest), 500);
+  playWinSound();
+  renderBestScores();
+  renderLeaderboard(state.gridSize);
+}
+
+// ── Win Modal ────────────────────────────────────────────
+function showWinModal(score, isNewBest) {
+  els.winPokemon.textContent = state.currentPoke.name;
+  els.winTime.textContent    = formatTime(state.seconds);
+  els.winMoves.textContent   = state.moves;
+  els.winScore.textContent   = score.toLocaleString();
+  els.bestBadge.hidden       = !isNewBest;
+  els.winModal.hidden = false;
+  launchConfetti();
+}
+
+function hideWinModal() {
+  els.winModal.hidden = true;
+}
+
+// ── Confetti ─────────────────────────────────────────────
+function launchConfetti() {
+  const container = $('confettiCanvas');
+  container.innerHTML = '';
+  const colors = ['#ffd700','#e63946','#4fc3f7','#69f0ae','#ff7675','#a29bfe','#fd79a8'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size  = 6 + Math.random() * 8;
+    piece.style.cssText = `
+      background:${color};left:${Math.random()*100}%;top:-10px;
+      width:${size}px;height:${size}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      transform:rotate(${Math.random()*360}deg);
+      animation:confettiFall ${1.5+Math.random()*1.5}s ${Math.random()*0.8}s ease-in forwards;`;
+    container.appendChild(piece);
+  }
+  if (!$('confettiStyle')) {
+    const style = document.createElement('style');
+    style.id = 'confettiStyle';
+    style.textContent = `@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}80%{opacity:1}100%{transform:translateY(300px) rotate(720deg) scale(0.5);opacity:0}}`;
+    document.head.appendChild(style);
+  }
+}
+
+// ── Sound Effects (Web Audio API) ────────────────────────
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return audioCtx;
+}
+
+function playTone(frequency, duration, type, gainVal) {
+  type = type || 'sine'; gainVal = gainVal || 0.15;
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(frequency, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(frequency * 0.8, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function playMoveSound() { playTone(440, 0.08, 'square', 0.08); }
+function playWinSound()  {
+  [523, 659, 784, 1047].forEach((n, i) => setTimeout(() => playTone(n, 0.3, 'sine', 0.15), i * 150));
+}
+
+// ── Game Initialization ──────────────────────────────────
+function initGame(showStart) {
+  stopTimer();
+  const { tiles, emptyIdx } = generatePuzzle(state.gridSize);
+  state.tiles       = tiles;
+  state.emptyIndex  = emptyIdx;
+  state.solved      = getSolvedState(state.gridSize);
+  state.moves       = 0;
+  state.seconds     = 0;
+  state.timerActive = false;
+  state.gameActive  = true;
+  state.isAnimating = false;
+  resetTimer();
+  updateMovesDisplay();
+  els.scoreDisplay.textContent = '—';
+  updatePokeHeader();
+  els.startPrompt.classList.add('hidden');
+  renderBoard();
+  renderBestScores();
+}
+
+// ── Difficulty ───────────────────────────────────────────
+function selectDifficulty(size) {
+  state.gridSize = parseInt(size);
+  $$('.diff-btn').forEach(btn => {
+    const active = parseInt(btn.dataset.size) === state.gridSize;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  renderLeaderboard(state.gridSize);
+}
+
+// ── Preview Toggle ───────────────────────────────────────
+let previewTimeout = null;
+
+function togglePreview(show) {
+  state.previewOpen = show;
+  els.previewOverlay.classList.toggle('visible', show);
+}
+
+// ── Difficulty Transition ────────────────────────────────
+function handleDiffChange(size) {
+  selectDifficulty(size);
+  els.board.style.transition = 'opacity 0.2s, transform 0.2s';
+  els.board.style.opacity = '0';
+  els.board.style.transform = 'scale(0.95)';
+  setTimeout(() => {
+    els.board.style.opacity = '1';
+    els.board.style.transform = 'scale(1)';
+    if (state.gameActive) initGame(false);
+  }, 200);
+}
+
+// ── Background Particle Canvas ───────────────────────────
+function initBgCanvas() {
+  const canvas = els.bgCanvas;
+  const ctx    = canvas.getContext('2d');
+  const particles = [];
+  const PARTICLE_COUNT = 50;
+
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+
+  function createParticle() {
+    return {
+      x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      dx: (Math.random() - 0.5) * 0.3, dy: (Math.random() - 0.5) * 0.3,
+      alpha: Math.random() * 0.5 + 0.1,
+      color: Math.random() > 0.7 ? '#ffd700' : Math.random() > 0.5 ? '#4fc3f7' : '#e63946',
+    };
+  }
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(createParticle());
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+      p.x += p.dx; p.y += p.dy;
+      if (p.x < 0 || p.x > canvas.width)  p.dx *= -1;
+      if (p.y < 0 || p.y > canvas.height) p.dy *= -1;
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(draw);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  draw();
+}
+
+// ── Resize Handler ───────────────────────────────────────
+function handleResize() { if (state.gameActive) renderBoard(); }
+
+// ── Solved Preview (initial state) ──────────────────────
+function renderSolvedPreview() {
+  const size = state.gridSize;
+  const tileSize = calcTileSize(size);
+  const imgUrl = getPokeUrl(state.currentPoke.id);
+  els.board.innerHTML = '';
+  els.board.style.gridTemplateColumns = `repeat(${size}, ${tileSize}px)`;
+  els.board.style.gridTemplateRows    = `repeat(${size}, ${tileSize}px)`;
+  getSolvedState(size).forEach((value, position) => {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    if (value === 0) {
+      tile.classList.add('empty');
+    } else {
+      const origPos = value - 1;
+      const origRow = Math.floor(origPos / size);
+      const origCol = origPos % size;
+      tile.style.backgroundImage    = `url('${imgUrl}')`;
+      tile.style.backgroundSize     = `${size * 100}%`;
+      tile.style.backgroundPosition = `${origCol * (100 / (size - 1))}% ${origRow * (100 / (size - 1))}%`;
+    }
+    els.board.appendChild(tile);
+  });
+  els.previewImg.src = imgUrl;
+}
+
+// ── Score Loop ───────────────────────────────────────────
+function setupScoreLoop() {
+  setInterval(() => { if (state.gameActive && state.timerActive) updateScoreDisplay(); }, 1000);
+}
+
+// ── Event Listeners ──────────────────────────────────────
+function setupEvents() {
+  $$('.diff-btn').forEach(btn => btn.addEventListener('click', () => handleDiffChange(btn.dataset.size)));
+  els.newGameBtn.addEventListener('click', () => initGame(false));
+
+  els.previewBtn.addEventListener('mousedown',  () => togglePreview(true));
+  els.previewBtn.addEventListener('mouseup',    () => togglePreview(false));
+  els.previewBtn.addEventListener('mouseleave', () => togglePreview(false));
+  els.previewBtn.addEventListener('touchstart', e => { e.preventDefault(); togglePreview(true); });
+  els.previewBtn.addEventListener('touchend',   () => togglePreview(false));
+
+  document.addEventListener('keydown', handleKeyboard);
+
+  els.modalNewGame.addEventListener('click', () => { hideWinModal(); initGame(false); });
+  els.modalClose.addEventListener('click',   () => hideWinModal());
+  els.winModal.addEventListener('click', e => { if (e.target === els.winModal) hideWinModal(); });
+
+  $$('.lb-tab').forEach(tab => tab.addEventListener('click', () => renderLeaderboard(parseInt(tab.dataset.diff))));
+
+  els.clearLbBtn.addEventListener('click', () => {
+    if (confirm('Clear all records? This cannot be undone.')) {
+      clearLeaderboard();
+      renderBestScores();
+      renderLeaderboard(currentLbDiff);
+    }
+  });
+
+  setupSwipe();
+
+  let resizeTimer;
+  window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(handleResize, 200); });
+
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'n' || e.key === 'N') && !e.ctrlKey && !e.metaKey) initGame(false);
+    if (e.key === 'p' || e.key === 'P') {
+      if (!state.previewOpen) {
+        togglePreview(true);
+        clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(() => togglePreview(false), 3000);
+      }
+    }
+    if (e.key === 'Escape') { hideWinModal(); togglePreview(false); }
+  });
+}
+
+// ── App Bootstrap ────────────────────────────────────────
+function init() {
+  renderPokemonSelector();
+  renderBestScores();
+  renderLeaderboard(3);
+  updatePokeHeader();
+  renderSolvedPreview();
+  setupEvents();
+  setupScoreLoop();
+  initBgCanvas();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+  </script>
+</body>
+</html>
